@@ -1,0 +1,182 @@
+@model DashboardViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Dashboard";
+    var inr = new CultureInfo("en-IN");
+    string M(decimal v) => "₹ " + v.ToString("N0", inr);
+    string preset = Model.Filter.Preset ?? "";
+    var accent = string.IsNullOrEmpty(Model.Farm?.AccentColor) ? "#16a34a" : Model.Farm!.AccentColor;
+}
+
+@* ---- Compact header + date filter ---- *@
+<div class="dash-topbar card-surface mb-3" id="dashTopbar">
+    <div class="dash-farm">
+        <span class="dash-logo"><img src="~/img/logo.svg" alt="Prawns Farm" /></span>
+        <div>
+            <div class="farm-name">
+                @(Model.Farm?.FarmName ?? "My Farm")
+                <span class="farm-indicator" style="--accent:@accent">
+                    <span class="farm-indicator-dot" style="background:@accent"></span>
+                    @(Model.Farm?.Code ?? "F") · Active
+                </span>
+            </div>
+            <div class="farm-meta">
+                <i class="bi bi-geo-alt"></i> @Model.Farm?.Location
+                &nbsp;•&nbsp; @Model.Farm?.LandAreaAcres acres
+            </div>
+        </div>
+    </div>
+    <button type="button" class="btn btn-sm btn-outline-success filter-toggle"
+            onclick="this.closest('.dash-topbar').classList.toggle('open')">
+        <i class="bi bi-funnel"></i> Filters
+    </button>
+    <form method="get" class="dash-filter">
+        <div class="preset-group">
+            <a class="chip @(preset=="today"?"active":"")" href="@Url.Action("Index", new { preset = "today" })">Today</a>
+            <a class="chip @(preset=="week"?"active":"")" href="@Url.Action("Index", new { preset = "week" })">7D</a>
+            <a class="chip @(preset=="month"?"active":"")" href="@Url.Action("Index", new { preset = "month" })">Month</a>
+            <a class="chip @(preset=="year"?"active":"")" href="@Url.Action("Index", new { preset = "year" })">Year</a>
+            <a class="chip @(preset=="all"?"active":"")" href="@Url.Action("Index", new { preset = "all" })">All</a>
+        </div>
+        <input type="date" name="From" value="@Model.FromDate.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+        <input type="date" name="To" value="@Model.ToDate.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+        <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-funnel"></i></button>
+    </form>
+</div>
+
+@* ---- KPI cards (tabs) with redirect actions ---- *@
+<div class="kpi-grid mb-3">
+    <div class="kpi-card kpi-red">
+        <div class="kpi-icon"><i class="bi bi-cart-dash"></i></div>
+        <div class="kpi-label">Total Expenses</div>
+        <div class="kpi-value" data-countup="@Model.TotalExpenses" data-money="1">@M(Model.TotalExpenses)</div>
+        <div class="kpi-actions">
+            <a asp-controller="Expenses" asp-action="Create" class="btn btn-sm btn-danger"><i class="bi bi-plus-lg"></i> Add</a>
+            <a asp-controller="Expenses" asp-action="Index" class="btn btn-sm btn-outline-secondary">View</a>
+        </div>
+    </div>
+    <div class="kpi-card kpi-green">
+        <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
+        <div class="kpi-label">Total Sales</div>
+        <div class="kpi-value" data-countup="@Model.TotalSales" data-money="1">@M(Model.TotalSales)</div>
+        <div class="kpi-actions">
+            <a asp-controller="Sales" asp-action="Create" class="btn btn-sm btn-success"><i class="bi bi-plus-lg"></i> Add</a>
+            <a asp-controller="Sales" asp-action="Index" class="btn btn-sm btn-outline-secondary">View</a>
+        </div>
+    </div>
+    <div class="kpi-card @(Model.IsProfit ? "kpi-blue" : "kpi-orange")">
+        <div class="kpi-icon"><i class="bi @(Model.IsProfit ? "bi-graph-up-arrow" : "bi-graph-down-arrow")"></i></div>
+        <div class="kpi-label">Net @(Model.IsProfit ? "Profit" : "Loss")</div>
+        <div class="kpi-value" data-countup="@Math.Abs(Model.NetProfit)" data-money="1">@M(Math.Abs(Model.NetProfit))</div>
+        <div class="kpi-actions">
+            <a asp-controller="Reports" asp-action="Index" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a>
+        </div>
+    </div>
+    <div class="kpi-card kpi-purple">
+        <div class="kpi-icon"><i class="bi bi-calendar3"></i></div>
+        <div class="kpi-label">Avg Expense / Day</div>
+        <div class="kpi-value" data-countup="@Model.AveragePerDay" data-money="1">@M(Model.AveragePerDay)</div>
+        <div class="kpi-actions kpi-meta">
+            <span><i class="bi bi-cart"></i> @Model.ExpenseCount exp</span>
+            <span><i class="bi bi-cash"></i> @Model.SaleCount sales</span>
+        </div>
+    </div>
+</div>
+
+@* ---- Graphs for visualisation ---- *@
+<div class="row g-3 mb-3">
+    <div class="col-lg-4 col-md-6">
+        <div class="card-surface chart-card">
+            <div class="card-head"><i class="bi bi-bar-chart-line"></i> Expenses vs Sales</div>
+            @if (Model.Trend.Any())
+            {
+                <div class="chart-canvas"><canvas id="trendChart"></canvas></div>
+            }
+            else
+            {
+                <div class="empty-state">No activity in this range.</div>
+            }
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <div class="card-surface chart-card">
+            <div class="card-head"><i class="bi bi-pie-chart"></i> Expenses by Category</div>
+            @if (Model.ExpenseByCategory.Any())
+            {
+                <div class="chart-canvas"><canvas id="categoryChart"></canvas></div>
+            }
+            else
+            {
+                <div class="empty-state">No expenses in this range.</div>
+            }
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-12">
+        <div class="card-surface chart-card">
+            <div class="card-head"><i class="bi bi-credit-card"></i> Payment Mode</div>
+            @if (Model.PaymentModeBreakdown.Any())
+            {
+                <div class="chart-canvas"><canvas id="paymentChart"></canvas></div>
+            }
+            else
+            {
+                <div class="empty-state">No data.</div>
+            }
+        </div>
+    </div>
+</div>
+
+@* ---- Expenses added in the last 24 hours (scrollable) ---- *@
+<div class="card-surface">
+    <div class="card-head d-flex justify-content-between flex-wrap gap-2">
+        <span><i class="bi bi-clock-history text-danger"></i> Expenses Added (Last 24 Hours)</span>
+        <span class="badge bg-danger-subtle text-danger align-self-center">@Model.Last24hExpenses.Count entries · @M(Model.Last24hExpenses.Sum(e => e.Amount))</span>
+    </div>
+    <div class="grid-scroll">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr><th>Added</th><th>Date</th><th>Category</th><th>Description</th><th class="text-end">Amount</th><th>Mode</th></tr>
+            </thead>
+            <tbody>
+            @if (!Model.Last24hExpenses.Any())
+            {
+                <tr><td colspan="6" class="text-center text-muted py-4">No expenses added in the last 24 hours. Use the <b>Add</b> button on the Total Expenses card.</td></tr>
+            }
+            @foreach (var e in Model.Last24hExpenses)
+            {
+                <tr>
+                    <td class="text-muted small">@e.CreatedOn.ToLocalTime().ToString("dd MMM, HH:mm")</td>
+                    <td>@e.Date.ToString("dd MMM yyyy")</td>
+                    <td><span class="badge" style="background:@(e.Category?.Color ?? "#64748b")">@e.Category?.Name</span></td>
+                    <td class="text-muted">@e.Description</td>
+                    <td class="text-end fw-semibold text-danger">@M(e.Amount)</td>
+                    <td><span class="badge bg-light text-dark">@e.PaymentMode</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const trendData = {
+        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Trend.Select(t => new DateTime(t.Year, t.Month, 1).ToString("MMM yy")))),
+        expenses: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Trend.Select(t => t.Expenses))),
+        sales: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Trend.Select(t => t.Sales)))
+    };
+    const categoryData = {
+        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ExpenseByCategory.Select(c => c.Name))),
+        values: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ExpenseByCategory.Select(c => c.Amount))),
+        colors: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ExpenseByCategory.Select(c => c.Color ?? "#22c55e")))
+    };
+    const paymentData = {
+        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentModeBreakdown.Select(p => p.Name))),
+        values: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentModeBreakdown.Select(p => p.Amount)))
+    };
+    const animateKpis = @(Model.Animate ? "true" : "false");
+
+    PrawnsFarm.renderDashboard(trendData, categoryData, paymentData);
+    if (animateKpis) PrawnsFarm.countUp();
+</script>
+}

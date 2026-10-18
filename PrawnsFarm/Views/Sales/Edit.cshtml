@@ -1,0 +1,26 @@
+@model Sale
+@{
+    ViewData["Title"] = "Edit Sale";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-pencil-square text-primary"></i> Edit Sale</h4>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="card-surface form-surface">
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="CreatedOn" />
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+        <partial name="_Form" model="Model" />
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Update Sale</button>
+            <a asp-action="Index" class="btn btn-light">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/sale-calc.js"></script>
+}

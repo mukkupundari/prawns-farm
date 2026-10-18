@@ -1,0 +1,30 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Rider / VS Code
+.idea/
+.vscode/
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+publish/
+*.dll
+*.pdb
+
+## OS
+Thumbs.db
+.DS_Store
+
+## App
+_shelltest.txt
+
+## secrets / deploy artefacts - never publish
+appsettings.Production.json
+*.ps1
+*.zip
+

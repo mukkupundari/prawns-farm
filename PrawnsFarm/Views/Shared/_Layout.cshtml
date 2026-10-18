@@ -1,0 +1,118 @@
+@using PrawnsFarm.Models.Entities
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    string Active(string c) => string.Equals(currentController, c, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+    var displayName = User.Identity?.Name ?? "Farmer";
+    var currentFarm = ViewData["CurrentFarm"] as FarmProfile;
+    var farmAccent = string.IsNullOrEmpty(currentFarm?.AccentColor) ? "#16a34a" : currentFarm!.AccentColor;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Prawns Farm</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-logo"><img src="~/img/logo.svg" alt="Prawns Farm" /></div>
+            <div>
+                <div class="brand-title">PRAWNS FARM</div>
+                <div class="brand-sub">Expense &amp; Profit Tracker</div>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <a class="nav-link @Active("Dashboard")" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+            <a class="nav-link @Active("SmartInsert")" asp-controller="SmartInsert" asp-action="Index"><i class="bi bi-magic"></i> Smart Insert</a>
+            <a class="nav-link @Active("Expenses")" asp-controller="Expenses" asp-action="Index"><i class="bi bi-cart-dash"></i> Expenses</a>
+            <a class="nav-link @Active("Sales")" asp-controller="Sales" asp-action="Index"><i class="bi bi-cash-stack"></i> Sales</a>
+            <a class="nav-link @Active("Reports")" asp-controller="Reports" asp-action="Index"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a>
+            <a class="nav-link @Active("Categories")" asp-controller="Categories" asp-action="Index"><i class="bi bi-tags"></i> Categories</a>
+        </nav>
+        <div class="sidebar-footer">
+            <i class="bi bi-shield-check"></i> Data stored in SQL Server
+        </div>
+    </aside>
+
+    <div class="main">
+        <header class="topbar">
+            <button class="btn btn-sm btn-light d-lg-none" id="menuToggle"><i class="bi bi-list"></i></button>
+            <div class="topbar-title">@ViewData["Title"]</div>
+
+            <div class="user-box">
+                @if (currentFarm != null)
+                {
+                    <a asp-controller="Farm" asp-action="Switch" class="farm-chip" style="--accent:@farmAccent" title="Switch farm">
+                        <span class="farm-chip-code" style="background:@farmAccent">@(currentFarm.Code ?? "F")</span>
+                        <span class="farm-chip-name">@currentFarm.FarmName</span>
+                        <i class="bi bi-chevron-expand"></i>
+                    </a>
+                }
+
+                <div class="dropdown profile-dd">
+                    <button class="profile-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="profile-ava"><img src="~/img/logo.svg" alt="" /></span>
+                        <span class="profile-name">@displayName</span>
+                        <i class="bi bi-caret-down-fill small"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end profile-menu">
+                        <li class="dropdown-header">
+                            <div class="fw-semibold">@displayName</div>
+                            <div class="text-muted small">@(User.FindFirst("username")?.Value)</div>
+                        </li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="bi bi-person-badge"></i> About / My Profile</a></li>
+                        <li><a class="dropdown-item" asp-controller="Users" asp-action="Index"><i class="bi bi-people"></i> Manage Logins</a></li>
+                        <li><a class="dropdown-item" asp-controller="Farm" asp-action="Switch"><i class="bi bi-shuffle"></i> Switch Farm</a></li>
+                        <li><a class="dropdown-item" asp-controller="Categories" asp-action="Index"><i class="bi bi-tags"></i> Categories</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle"></i> @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+</div>
+
+@* ---- Global quick-add floating button ---- *@
+<div class="fab-wrap" id="fabWrap">
+    <div class="fab-menu">
+        <a asp-controller="Expenses" asp-action="Create" class="fab-item fab-exp"><i class="bi bi-cart-plus"></i> Add Expense</a>
+        <a asp-controller="Sales" asp-action="Create" class="fab-item fab-sale"><i class="bi bi-cash-coin"></i> Add Sale</a>
+    </div>
+    <button type="button" class="fab-main" id="fabToggle" aria-label="Quick add"><i class="bi bi-plus-lg"></i></button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

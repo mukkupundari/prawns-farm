@@ -1,0 +1,84 @@
+@model List<PrawnsFarm.Models.Entities.User>
+@{
+    ViewData["Title"] = "Manage Logins";
+    var currentUsername = User.FindFirst("username")?.Value;
+}
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card-surface">
+            <div class="card-head"><i class="bi bi-people"></i> Logins (@Model.Count)</div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr><th>User</th><th>Email</th><th>Phone</th><th>Role</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var u in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@u.DisplayName</div>
+                                <div class="text-muted small">@@@u.Username @(u.Username == currentUsername ? "(you)" : "")</div>
+                            </td>
+                            <td class="text-muted">@(string.IsNullOrWhiteSpace(u.Email) ? "—" : u.Email)</td>
+                            <td class="text-muted">@(string.IsNullOrWhiteSpace(u.Phone) ? "—" : u.Phone)</td>
+                            <td><span class="badge bg-light text-dark">@(u.Role ?? "User")</span></td>
+                            <td class="text-end">
+                                @if (u.Username != currentUsername)
+                                {
+                                    <form asp-controller="Users" asp-action="Delete" method="post" onsubmit="return confirm('Remove login @u.Username?');" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@u.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card-surface">
+            <div class="card-head"><i class="bi bi-person-plus"></i> Add New Login</div>
+            <form asp-controller="Users" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-2">
+                    <label class="form-label">Username <span class="text-danger">*</span></label>
+                    <input name="Username" class="form-control" required maxlength="50" placeholder="e.g. manager2" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Password <span class="text-danger">*</span></label>
+                    <input name="Password" type="password" class="form-control" required minlength="6" placeholder="min 6 characters" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Display name</label>
+                    <input name="DisplayName" class="form-control" maxlength="100" placeholder="Full name" />
+                </div>
+                <div class="row g-2">
+                    <div class="col-6 mb-2">
+                        <label class="form-label">Email</label>
+                        <input name="Email" type="email" class="form-control" placeholder="name@example.com" />
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label class="form-label">Phone</label>
+                        <input name="Phone" class="form-control" placeholder="+91..." />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <select name="Role" class="form-select">
+                        <option value="Owner">Owner</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Member" selected>Member</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success w-100"><i class="bi bi-plus-lg"></i> Create Login</button>
+            </form>
+        </div>
+    </div>
+</div>

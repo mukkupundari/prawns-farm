@@ -1,0 +1,49 @@
+@model Sale
+@{
+    var modes = new[] { "Cash", "UPI", "Card", "Bank Transfer", "Credit" };
+}
+<div class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="Date" class="form-label">Date</label>
+        <input asp-for="Date" type="date" class="form-control" />
+        <span asp-validation-for="Date" class="text-danger small"></span>
+    </div>
+    <div class="col-md-8">
+        <label asp-for="Crop" class="form-label">Crop / Produce</label>
+        <input asp-for="Crop" class="form-control" placeholder="e.g. Vannamei Prawns" />
+        <span asp-validation-for="Crop" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="QuantityKg" class="form-label">Quantity (kg)</label>
+        <input asp-for="QuantityKg" id="qty" type="number" step="0.01" min="0" class="form-control" placeholder="0" />
+        <span asp-validation-for="QuantityKg" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="RatePerKg" class="form-label">Rate / kg (₹)</label>
+        <input asp-for="RatePerKg" id="rate" type="number" step="0.01" min="0" class="form-control" placeholder="0" />
+        <span asp-validation-for="RatePerKg" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Amount" class="form-label">Total Amount (₹)</label>
+        <input asp-for="Amount" id="amount" type="number" step="0.01" min="0" class="form-control" placeholder="auto-calculated" />
+        <span asp-validation-for="Amount" class="text-danger small"></span>
+        <div class="form-text">Leave blank to auto-calc Qty × Rate.</div>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Buyer" class="form-label">Buyer (optional)</label>
+        <input asp-for="Buyer" class="form-control" placeholder="e.g. Local Trader" />
+    </div>
+    <div class="col-md-6">
+        <label asp-for="PaymentMode" class="form-label">Payment Mode</label>
+        <select asp-for="PaymentMode" class="form-select">
+            @foreach (var m in modes)
+            {
+                <option value="@m">@m</option>
+            }
+        </select>
+    </div>
+    <div class="col-12">
+        <label asp-for="Notes" class="form-label">Notes (optional)</label>
+        <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+    </div>
+</div>

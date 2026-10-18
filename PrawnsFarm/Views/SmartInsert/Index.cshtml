@@ -1,0 +1,121 @@
+@using System.Text.Json
+@using PrawnsFarm.Models.Entities
+@{
+    ViewData["Title"] = "Smart Insert";
+    var farm = ViewData["CurrentFarm"] as FarmProfile;
+    var accent = string.IsNullOrEmpty(farm?.AccentColor) ? "#16a34a" : farm!.AccentColor;
+    var cats = ViewBag.Categories as IEnumerable<dynamic>;
+    var catsJson = JsonSerializer.Serialize((cats ?? Enumerable.Empty<dynamic>())
+        .Select(c => new { id = (int)c.Id, name = (string)c.Name }));
+    var modes = (string[])ViewBag.PaymentModes;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="si-head card-surface mb-3">
+    <div>
+        <h4 class="mb-1"><i class="bi bi-magic text-success"></i> Smart Insert</h4>
+        <div class="text-muted small">Add an expense or sale by <b>voice</b> or <b>QR</b>. A record is saved only when everything required is clear.</div>
+    </div>
+    <div class="si-farm" style="--accent:@accent">
+        <span class="si-farm-code" style="background:@accent">@(farm?.Code ?? "F")</span>
+        <div>
+            <div class="small text-muted">Saving to</div>
+            <div class="fw-semibold">@farm?.FarmName</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card-surface h-100">
+            <ul class="nav nav-pills si-tabs mb-3" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tabVoice" type="button"><i class="bi bi-mic"></i> Voice</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabQr" type="button"><i class="bi bi-qr-code-scan"></i> QR Scan</button></li>
+            </ul>
+
+            <div class="tab-content">
+                @* ---------- Voice ---------- *@
+                <div class="tab-pane fade show active" id="tabVoice">
+                    <div class="text-center py-2">
+                        <button type="button" id="micBtn" class="mic-btn" aria-label="Start voice capture">
+                            <i class="bi bi-mic-fill"></i>
+                        </button>
+                        <div id="micStatus" class="mic-status">Tap the mic and speak a short command</div>
+                    </div>
+
+                    <div class="si-transcript" id="transcript" aria-live="polite"></div>
+
+                    <div class="si-examples">
+                        <div class="si-examples-title"><i class="bi bi-lightbulb"></i> Try saying</div>
+                        <ul>
+                            <li>"Expense 5000 for feed paid by cash"</li>
+                            <li>"Spent 1200 on power by UPI today"</li>
+                            <li>"Sale 200 kg at 350 rupees to local trader cash"</li>
+                            <li>"Sold prawns 150000 by bank transfer"</li>
+                        </ul>
+                        <div class="text-muted small"><i class="bi bi-info-circle"></i> Voice works best in Chrome / Edge and needs mic permission.</div>
+                    </div>
+                </div>
+
+                @* ---------- QR ---------- *@
+                <div class="tab-pane fade" id="tabQr">
+                    <div id="qrReader" class="si-qr"></div>
+                    <div class="text-center mt-2">
+                        <button type="button" id="qrStart" class="btn btn-outline-success btn-sm"><i class="bi bi-camera-video"></i> Start camera</button>
+                        <button type="button" id="qrStop" class="btn btn-outline-secondary btn-sm d-none"><i class="bi bi-stop-circle"></i> Stop</button>
+                    </div>
+                    <div class="si-examples mt-2">
+                        <div class="si-examples-title"><i class="bi bi-qr-code"></i> QR payload format</div>
+                        <p class="small text-muted mb-1">Encode either JSON or a pipe string in the QR code:</p>
+                        <code class="d-block small mb-1">{"type":"expense","amount":5000,"category":"Feed","mode":"Cash"}</code>
+                        <code class="d-block small">PF|type=sale|qty=200|rate=350|mode=Cash|buyer=Local Trader</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ---------- Review / confirm ---------- *@
+    <div class="col-lg-6">
+        <div class="card-surface h-100">
+            <div class="card-head"><i class="bi bi-clipboard-check"></i> Review &amp; Confirm</div>
+
+            <div id="reviewEmpty" class="empty-state">
+                <div><i class="bi bi-soundwave" style="font-size:34px;color:var(--muted)"></i></div>
+                Capture something with voice or QR and I'll show it here for your confirmation.
+            </div>
+
+            <div id="reviewBox" class="d-none">
+                <div class="si-type-badge" id="rvType">—</div>
+                <table class="table si-review-table mb-3">
+                    <tbody id="rvRows"></tbody>
+                </table>
+
+                <div id="rvErrors" class="si-errors d-none"></div>
+
+                <div class="d-flex gap-2">
+                    <button type="button" id="confirmBtn" class="btn btn-success flex-grow-1" disabled><i class="bi bi-check-lg"></i> Confirm &amp; Save</button>
+                    <button type="button" id="clearBtn" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> Clear</button>
+                </div>
+            </div>
+
+            <div id="resultBox" class="mt-3"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        window.SmartInsertConfig = {
+            saveUrl: '@Url.Action("Save", "SmartInsert")',
+            token: document.querySelector('input[name="__RequestVerificationToken"]').value,
+            categories: @Html.Raw(catsJson),
+            paymentModes: @Html.Raw(JsonSerializer.Serialize(modes)),
+            farmName: @Html.Raw(JsonSerializer.Serialize(farm?.FarmName ?? "")),
+            today: '@DateTime.Today.ToString("yyyy-MM-dd")'
+        };
+    </script>
+    <script src="~/js/smart-insert.js" asp-append-version="true"></script>
+}

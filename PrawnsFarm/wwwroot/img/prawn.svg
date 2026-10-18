@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120" role="img" aria-label="Prawn">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffd9b0" stop-opacity="0.95"/>
+      <stop offset="0.5" stop-color="#ff9d6e" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#ef5a46" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="0.5"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#soft)">
+    <!-- long antennae sweeping forward (right) -->
+    <path d="M196 56 q34 -6 44 -26 M196 62 q40 2 48 22 M198 58 q30 10 40 2"
+          fill="none" stroke="#ffe3c2" stroke-width="2.2" stroke-linecap="round" opacity="0.9"/>
+
+    <!-- walking legs / swimmerets -->
+    <g stroke="#ef7a52" stroke-width="3" stroke-linecap="round" opacity="0.9">
+      <path d="M96 78 l -6 20"/>
+      <path d="M110 80 l -2 22"/>
+      <path d="M124 80 l 3 22"/>
+      <path d="M138 78 l 7 21"/>
+      <path d="M152 74 l 11 19"/>
+    </g>
+
+    <!-- curled, segmented body: tail (left) to head (right) -->
+    <path d="M44 60
+             C 34 40, 54 24, 86 28
+             C 120 32, 150 40, 176 52
+             C 192 59, 196 66, 190 72
+             C 176 86, 150 90, 120 86
+             C 92 82, 70 78, 58 72
+             C 50 68, 46 64, 44 60 Z"
+          fill="url(#body)" stroke="#e05a3f" stroke-width="2"/>
+
+    <!-- segment lines -->
+    <g stroke="#d9492f" stroke-width="1.6" opacity="0.55" fill="none">
+      <path d="M78 30 q -6 26 8 50"/>
+      <path d="M98 31 q -6 27 8 52"/>
+      <path d="M118 34 q -5 26 8 50"/>
+      <path d="M138 38 q -3 24 8 46"/>
+    </g>
+
+    <!-- top shine highlight -->
+    <path d="M70 32 C 104 30, 150 42, 182 56 C 150 40, 108 34, 76 38 Z"
+          fill="url(#shine)" opacity="0.6"/>
+
+    <!-- head / rostrum (pointy nose, right) -->
+    <path d="M176 52 q22 2 34 8 q-16 2 -26 8 q8 -8 -8 -16 Z" fill="url(#body)" stroke="#e05a3f" stroke-width="1.5"/>
+
+    <!-- tail fan (left) -->
+    <path d="M44 60 l -20 -16 m 20 16 l -24 -2 m 24 2 l -18 16"
+          fill="none" stroke="#f0714e" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- eye -->
+    <circle cx="188" cy="58" r="4.6" fill="#0f172a"/>
+    <circle cx="186.5" cy="56.5" r="1.4" fill="#ffffff"/>
+  </g>
+</svg>

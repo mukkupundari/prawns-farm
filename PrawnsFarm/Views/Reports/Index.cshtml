@@ -1,0 +1,95 @@
+@model List<RecentTransaction>
+@using System.Globalization
+@{
+    ViewData["Title"] = "Reports";
+    var inr = new CultureInfo("en-IN");
+    var filter = ViewBag.Filter as DateRangeFilter ?? new DateRangeFilter();
+    DateTime from = ViewBag.From;
+    DateTime to = ViewBag.To;
+    string type = ViewBag.Type;
+    decimal totalExp = ViewBag.TotalExpenses;
+    decimal totalSales = ViewBag.TotalSales;
+    decimal net = totalSales - totalExp;
+    string M(decimal v) => "₹ " + v.ToString("N0", inr);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-file-earmark-bar-graph text-primary"></i> Reports</h4>
+    <div class="d-flex gap-2">
+        <a asp-action="ExportExcel" asp-route-From="@from.ToString("yyyy-MM-dd")" asp-route-To="@to.ToString("yyyy-MM-dd")"
+           asp-route-CategoryId="@filter.CategoryId" asp-route-type="@type" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> Export Excel
+        </a>
+        <a asp-action="Export" asp-route-From="@from.ToString("yyyy-MM-dd")" asp-route-To="@to.ToString("yyyy-MM-dd")"
+           asp-route-CategoryId="@filter.CategoryId" asp-route-type="@type" class="btn btn-outline-success">
+            <i class="bi bi-filetype-csv"></i> Export CSV
+        </a>
+    </div>
+</div>
+
+<form method="get" class="filter-bar card-surface mb-3">
+    <div class="range-inputs flex-wrap">
+        <input type="date" name="From" value="@from.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+        <span class="text-muted">to</span>
+        <input type="date" name="To" value="@to.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+        <select name="type" class="form-select form-select-sm">
+            <option value="all" selected="@(type=="all")">All</option>
+            <option value="expense" selected="@(type=="expense")">Expenses only</option>
+            <option value="sale" selected="@(type=="sale")">Sales only</option>
+        </select>
+        <select name="CategoryId" class="form-select form-select-sm" asp-items="ViewBag.Categories">
+            <option value="">All categories</option>
+        </select>
+        <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-funnel"></i> Run</button>
+    </div>
+</form>
+
+<div class="kpi-grid mb-3">
+    <div class="kpi-card kpi-red">
+        <div class="kpi-label">Total Expenses</div>
+        <div class="kpi-value">@M(totalExp)</div>
+    </div>
+    <div class="kpi-card kpi-green">
+        <div class="kpi-label">Total Sales</div>
+        <div class="kpi-value">@M(totalSales)</div>
+    </div>
+    <div class="kpi-card @(net >= 0 ? "kpi-blue" : "kpi-orange")">
+        <div class="kpi-label">Net @(net >= 0 ? "Profit" : "Loss")</div>
+        <div class="kpi-value">@M(Math.Abs(net))</div>
+    </div>
+</div>
+
+<div class="card-surface">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr><th>Date</th><th>Type</th><th>Category / Crop</th><th>Description</th><th class="text-end">Amount</th><th>Payment</th></tr>
+            </thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="6" class="text-center text-muted py-4">No records for the selected filters.</td></tr>
+            }
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.Date.ToString("dd MMM yyyy")</td>
+                    <td>
+                        @if (r.Type == "Sale") { <span class="badge bg-success-subtle text-success">Sale</span> }
+                        else { <span class="badge bg-danger-subtle text-danger">Expense</span> }
+                    </td>
+                    <td>@r.Category</td>
+                    <td class="text-muted">@r.Description</td>
+                    <td class="text-end fw-semibold @(r.Type=="Sale"?"text-success":"text-danger")">@M(r.Amount)</td>
+                    <td><span class="badge bg-light text-dark">@r.PaymentMode</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<p class="text-muted small mt-3">
+    <i class="bi bi-database-check"></i> Filtering, date ranges and report data are produced by SQL stored procedures
+    (<code>dbo.usp_Report_Transactions</code>) running in the local database.
+</p>

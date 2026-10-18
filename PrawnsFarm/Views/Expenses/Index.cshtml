@@ -1,0 +1,63 @@
+@model List<Expense>
+@using System.Globalization
+@{
+    ViewData["Title"] = "Expenses";
+    var inr = new CultureInfo("en-IN");
+    var filter = ViewBag.Filter as DateRangeFilter ?? new DateRangeFilter();
+    DateTime from = ViewBag.From;
+    DateTime to = ViewBag.To;
+    decimal total = ViewBag.Total;
+    string M(decimal v) => "₹ " + v.ToString("N0", inr);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-cart-dash text-danger"></i> Expenses</h4>
+    <a asp-action="Create" class="btn btn-success"><i class="bi bi-plus-lg"></i> Add Expense</a>
+</div>
+
+<form method="get" class="filter-bar card-surface mb-3">
+    <div class="range-inputs flex-wrap">
+        <input type="date" name="From" value="@from.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+        <span class="text-muted">to</span>
+        <input type="date" name="To" value="@to.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+        <select name="CategoryId" class="form-select form-select-sm" asp-items="ViewBag.Categories">
+            <option value="">All categories</option>
+        </select>
+        <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-funnel"></i> Filter</button>
+        <a href="@Url.Action("Index", new { preset = "all" })" class="btn btn-sm btn-outline-secondary">Reset</a>
+    </div>
+    <div class="ms-auto fw-semibold">Total: <span class="text-danger">@M(total)</span> · @Model.Count items</div>
+</form>
+
+<div class="card-surface">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr><th>Date</th><th>Category</th><th>Description</th><th class="text-end">Amount</th><th>Payment</th><th>Notes</th><th class="text-end">Action</th></tr>
+            </thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">No expenses in this range.</td></tr>
+            }
+            @foreach (var e in Model)
+            {
+                <tr>
+                    <td>@e.Date.ToString("dd MMM yyyy")</td>
+                    <td><span class="badge" style="background:@(e.Category?.Color ?? "#64748b")">@e.Category?.Name</span></td>
+                    <td>@e.Description</td>
+                    <td class="text-end fw-semibold text-danger">@M(e.Amount)</td>
+                    <td><span class="badge bg-light text-dark">@e.PaymentMode</span></td>
+                    <td class="text-muted small">@e.Notes</td>
+                    <td class="text-end">
+                        <a asp-action="Edit" asp-route-id="@e.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        <form asp-action="Delete" asp-route-id="@e.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this expense?');">
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
